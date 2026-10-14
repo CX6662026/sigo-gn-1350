@@ -8,7 +8,7 @@ export const usuarios = [
   },
   {
     usuario: "arturo",
-    contraseña: "5678",
+    contraseña: "1350",
     nombre: "Arturo",
     rol: "Oficial"
   },
