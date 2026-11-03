@@ -34,6 +34,10 @@ function Dashboard() {
           {usuario ? usuario.rol : ""}
         </p>
 
+        <button onClick={() => navigate("/expedientes")}>
+          Módulo de Expedientes
+        </button>
+
         <button onClick={cerrarSesion}>
           Cerrar sesión
         </button>

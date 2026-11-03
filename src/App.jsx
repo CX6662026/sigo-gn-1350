@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Expedientes from "./pages/Expedientes";
 import RutaProtegida from "./components/RutaProtegida";
 
 function App() {
@@ -15,6 +16,15 @@ function App() {
           element={
             <RutaProtegida>
               <Dashboard />
+            </RutaProtegida>
+          }
+        />
+
+        <Route
+          path="/expedientes"
+          element={
+            <RutaProtegida>
+              <Expedientes />
             </RutaProtegida>
           }
         />
