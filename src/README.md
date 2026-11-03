@@ -1,6 +1,6 @@
 # Canchola Gómez Arturo Guyuk
 
-**Número de boleta:** [2026601350]
+**Número de boleta:** 2026601350
 
 # SIGO-GN
 
@@ -10,4 +10,33 @@ Proyecto de la materia Sistemas Operativos del Instituto Politécnico Nacional, 
 
 ## Descripción
 
-Este proyecto se desarrolla utilizando React y Vite como parte de la Práctica 1, cuyo objetivo es preparar el entorno de desarrollo y crear el proyecto base del sistema SIGO-GN.
+Proyecto desarrollado utilizando React y Vite para la gestión de expedientes del sistema SIGO-GN.
+
+## Práctica 3 — Módulo de Expedientes
+
+Se implementó un módulo para administrar expedientes mediante las siguientes operaciones:
+
+- Crear expedientes.
+- Consultar expedientes.
+- Modificar expedientes.
+- Eliminar expedientes.
+
+## Backend
+
+El frontend se conecta con un servidor desarrollado en Node.js y Express.
+
+Dirección del servidor:
+
+http://localhost:4000
+
+Los expedientes se almacenan como archivos JSON individuales en la carpeta `data/expedientes`.
+
+## Ejecución
+
+Instalar dependencias:
+
+npm install
+
+Iniciar el frontend:
+
+npm run dev
