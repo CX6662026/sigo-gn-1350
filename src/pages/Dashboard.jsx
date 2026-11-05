@@ -38,6 +38,10 @@ function Dashboard() {
           Módulo de Expedientes
         </button>
 
+        <button onClick={() => navigate("/operativos")}>
+          Módulo de Operativos
+        </button>
+
         <button onClick={cerrarSesion}>
           Cerrar sesión
         </button>

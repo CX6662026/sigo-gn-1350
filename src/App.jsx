@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Expedientes from "./pages/Expedientes";
 import Permisos from "./pages/Permisos";
+import Operativos from "./pages/Operativos";
 import RutaProtegida from "./components/RutaProtegida";
 
 function App() {
@@ -38,10 +39,18 @@ function App() {
             </RutaProtegida>
           }
         />
+
+        <Route
+          path="/operativos"
+          element={
+            <RutaProtegida>
+              <Operativos />
+            </RutaProtegida>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-
