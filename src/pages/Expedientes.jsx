@@ -1,9 +1,16 @@
 
 import { useEffect, useState } from "react";
+import { tienePermiso } from "../utils/permisos";
 
 const API = "http://localhost:4000/expedientes";
 
 function Expedientes() {
+  const rol = localStorage.getItem("sigoRol") || "";
+
+  const puedeLeer = tienePermiso(rol, 4);
+  const puedeEditar = tienePermiso(rol, 2);
+  const puedeEliminar = tienePermiso(rol, 1);
+
   const [expedientes, setExpedientes] = useState([]);
   const [formulario, setFormulario] = useState({
     folio: "",
@@ -19,7 +26,6 @@ function Expedientes() {
   const [editando, setEditando] = useState(false);
   const [cargando, setCargando] = useState(true);
 
-  // Estados de búsqueda, filtros y ordenamiento
   const [busqueda, setBusqueda] = useState("");
   const [estatusFiltro, setEstatusFiltro] = useState("");
   const [prioridadFiltro, setPrioridadFiltro] = useState("");
@@ -29,7 +35,6 @@ function Expedientes() {
 
   const POR_PAGINA = 10;
 
-  // Consultar expedientes
   const cargarExpedientes = async () => {
     try {
       const respuesta = await fetch(API);
@@ -45,14 +50,13 @@ function Expedientes() {
   };
 
   useEffect(() => {
-  const obtenerDatos = async () => {
-    await cargarExpedientes();
-  };
+    const obtenerDatos = async () => {
+      await cargarExpedientes();
+    };
 
-  obtenerDatos();
-}, []);
+    obtenerDatos();
+  }, []);
 
-  // Búsqueda con pequeño retraso
   useEffect(() => {
     const temporizador = setTimeout(async () => {
       try {
@@ -80,9 +84,13 @@ function Expedientes() {
     });
   };
 
-  // Registrar o actualizar expediente
   const guardarExpediente = async (e) => {
     e.preventDefault();
+
+    if (!puedeEditar) {
+      alert("No tienes permiso para realizar esta acción.");
+      return;
+    }
 
     try {
       const url = editando
@@ -92,7 +100,8 @@ function Expedientes() {
       const respuesta = await fetch(url, {
         method: editando ? "PUT" : "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "x-rol": rol
         },
         body: JSON.stringify(formulario)
       });
@@ -112,8 +121,9 @@ function Expedientes() {
     }
   };
 
-  // Preparar expediente para editar
   const editarExpediente = (expediente) => {
+    if (!puedeEditar) return;
+
     setFormulario({
       ...expediente,
       estatus: expediente.estatus || "Abierto",
@@ -124,15 +134,19 @@ function Expedientes() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Eliminar expediente
   const eliminarExpediente = async (folio) => {
+    if (!puedeEliminar) return;
+
     if (!window.confirm(`¿Deseas eliminar el expediente ${folio}?`)) {
       return;
     }
 
     try {
       const respuesta = await fetch(`${API}/${folio}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "x-rol": rol
+        }
       });
 
       const resultado = await respuesta.json();
@@ -149,7 +163,6 @@ function Expedientes() {
     }
   };
 
-  // Limpiar formulario
   const limpiarFormulario = () => {
     setFormulario({
       folio: "",
@@ -165,7 +178,6 @@ function Expedientes() {
     setEditando(false);
   };
 
-  // Ordenar columnas
   const ordenar = (columna) => {
     if (columnaOrden === columna) {
       setDireccion(direccion === "asc" ? "desc" : "asc");
@@ -177,7 +189,6 @@ function Expedientes() {
     setPagina(1);
   };
 
-  // Aplicar filtros
   const expedientesFiltrados = expedientes.filter((expediente) => {
     const coincideEstatus =
       !estatusFiltro || expediente.estatus === estatusFiltro;
@@ -188,7 +199,6 @@ function Expedientes() {
     return coincideEstatus && coincidePrioridad;
   });
 
-  // Ordenar resultados
   const expedientesOrdenados = [...expedientesFiltrados].sort((a, b) => {
     let valorA = a[columnaOrden] || "";
     let valorB = b[columnaOrden] || "";
@@ -207,7 +217,6 @@ function Expedientes() {
     return direccion === "asc" ? comparacion : -comparacion;
   });
 
-  // Paginación
   const totalPaginas = Math.max(
     1,
     Math.ceil(expedientesOrdenados.length / POR_PAGINA)
@@ -220,7 +229,6 @@ function Expedientes() {
     inicio + POR_PAGINA
   );
 
-  // Estilos del estatus
   const estiloEstatus = (estatus) => {
     const colores = {
       "Abierto": {
@@ -262,6 +270,10 @@ function Expedientes() {
     </th>
   );
 
+  if (!puedeLeer) {
+    return <h2>No tienes permiso para consultar expedientes.</h2>;
+  }
+
   return (
     <div style={{
       padding: "30px",
@@ -270,108 +282,110 @@ function Expedientes() {
     }}>
       <h1>Módulo de Expedientes</h1>
       <p>Administración de expedientes del sistema SIGO-GN.</p>
+      <p>Rol actual: <strong>{rol}</strong></p>
 
-      <form
-        onSubmit={guardarExpediente}
-        style={{
-          display: "grid",
-          gap: "12px",
-          maxWidth: "600px",
-          padding: "20px",
-          border: "1px solid #ccc",
-          borderRadius: "10px"
-        }}
-      >
-        <h2>{editando ? "Editar expediente" : "Registrar expediente"}</h2>
-
-        <label>Folio</label>
-        <input
-          name="folio"
-          value={formulario.folio}
-          onChange={manejarCambio}
-          placeholder="EXP-1350-001"
-          required
-          disabled={editando}
-        />
-
-        <label>Nombre del operativo</label>
-        <input
-          name="nombre"
-          value={formulario.nombre}
-          onChange={manejarCambio}
-          required
-        />
-
-        <label>Tipo de incidente</label>
-        <input
-          name="tipoIncidente"
-          value={formulario.tipoIncidente}
-          onChange={manejarCambio}
-          required
-        />
-
-        <label>Zona</label>
-        <input
-          name="zona"
-          value={formulario.zona}
-          onChange={manejarCambio}
-          required
-        />
-
-        <label>Fecha</label>
-        <input
-          type="date"
-          name="fecha"
-          value={formulario.fecha}
-          onChange={manejarCambio}
-          required
-        />
-
-        <label>Descripción</label>
-        <textarea
-          name="descripcion"
-          value={formulario.descripcion}
-          onChange={manejarCambio}
-          rows="3"
-          required
-        />
-
-        <label>Estatus</label>
-        <select
-          name="estatus"
-          value={formulario.estatus}
-          onChange={manejarCambio}
+      {puedeEditar && (
+        <form
+          onSubmit={guardarExpediente}
+          style={{
+            display: "grid",
+            gap: "12px",
+            maxWidth: "600px",
+            padding: "20px",
+            border: "1px solid #ccc",
+            borderRadius: "10px"
+          }}
         >
-          <option value="Abierto">Abierto</option>
-          <option value="En proceso">En proceso</option>
-          <option value="Cerrado">Cerrado</option>
-        </select>
+          <h2>{editando ? "Editar expediente" : "Registrar expediente"}</h2>
 
-        <label>Prioridad</label>
-        <select
-          name="prioridad"
-          value={formulario.prioridad}
-          onChange={manejarCambio}
-        >
-          <option value="Alta">Alta</option>
-          <option value="Media">Media</option>
-          <option value="Baja">Baja</option>
-        </select>
+          <label>Folio</label>
+          <input
+            name="folio"
+            value={formulario.folio}
+            onChange={manejarCambio}
+            placeholder="EXP-1350-001"
+            required
+            disabled={editando}
+          />
 
-        <button type="submit">
-          {editando ? "Actualizar expediente" : "Registrar expediente"}
-        </button>
+          <label>Nombre del operativo</label>
+          <input
+            name="nombre"
+            value={formulario.nombre}
+            onChange={manejarCambio}
+            required
+          />
 
-        {editando && (
-          <button type="button" onClick={limpiarFormulario}>
-            Cancelar edición
+          <label>Tipo de incidente</label>
+          <input
+            name="tipoIncidente"
+            value={formulario.tipoIncidente}
+            onChange={manejarCambio}
+            required
+          />
+
+          <label>Zona</label>
+          <input
+            name="zona"
+            value={formulario.zona}
+            onChange={manejarCambio}
+            required
+          />
+
+          <label>Fecha</label>
+          <input
+            type="date"
+            name="fecha"
+            value={formulario.fecha}
+            onChange={manejarCambio}
+            required
+          />
+
+          <label>Descripción</label>
+          <textarea
+            name="descripcion"
+            value={formulario.descripcion}
+            onChange={manejarCambio}
+            rows="3"
+            required
+          />
+
+          <label>Estatus</label>
+          <select
+            name="estatus"
+            value={formulario.estatus}
+            onChange={manejarCambio}
+          >
+            <option value="Abierto">Abierto</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Cerrado">Cerrado</option>
+          </select>
+
+          <label>Prioridad</label>
+          <select
+            name="prioridad"
+            value={formulario.prioridad}
+            onChange={manejarCambio}
+          >
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+
+          <button type="submit">
+            {editando ? "Actualizar expediente" : "Registrar expediente"}
           </button>
-        )}
-      </form>
+
+          {editando && (
+            <button type="button" onClick={limpiarFormulario}>
+              Cancelar edición
+            </button>
+          )}
+        </form>
+      )}
 
       <h2 style={{ marginTop: "30px" }}>Expedientes registrados</h2>
 
-      {/* Búsqueda */}
       <input
         type="text"
         placeholder="Buscar por folio, operativo o descripción..."
@@ -385,7 +399,6 @@ function Expedientes() {
         }}
       />
 
-      {/* Filtros */}
       <div style={{
         display: "flex",
         gap: "12px",
@@ -441,7 +454,7 @@ function Expedientes() {
                   {encabezadoOrden("Fecha de creación", "fechaCreacion")}
                   {encabezadoOrden("Prioridad", "prioridad")}
                   <th>Estatus</th>
-                  <th>Acciones</th>
+                  { (puedeEditar || puedeEliminar) && <th>Acciones</th> }
                 </tr>
               </thead>
 
@@ -465,22 +478,33 @@ function Expedientes() {
                         {expediente.estatus || "Abierto"}
                       </span>
                     </td>
-                    <td>
-                      <button onClick={() => editarExpediente(expediente)}>
-                        Editar
-                      </button>{" "}
-                      <button onClick={() =>
-                        eliminarExpediente(expediente.folio)
-                      }>
-                        Eliminar
-                      </button>
-                    </td>
+
+                    {(puedeEditar || puedeEliminar) && (
+                      <td>
+                        {puedeEditar && (
+                          <button onClick={() => editarExpediente(expediente)}>
+                            Editar
+                          </button>
+                        )}{" "}
+
+                        {puedeEliminar && (
+                          <button onClick={() =>
+                            eliminarExpediente(expediente.folio)
+                          }>
+                            Eliminar
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
 
                 {expedientesPagina.length === 0 && (
                   <tr>
-                    <td colSpan="8" style={{ textAlign: "center", padding: "20px" }}>
+                    <td
+                      colSpan={puedeEditar || puedeEliminar ? 8 : 7}
+                      style={{ textAlign: "center", padding: "20px" }}
+                    >
                       No se encontraron expedientes.
                     </td>
                   </tr>
@@ -489,7 +513,6 @@ function Expedientes() {
             </table>
           </div>
 
-          {/* Paginación */}
           <div style={{
             display: "flex",
             alignItems: "center",
