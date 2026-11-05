@@ -20,11 +20,18 @@ function Login() {
     );
 
     if (encontrado) {
-      const { contraseña, ...datosUsuario } = encontrado;
+      const datosUsuario = {
+  usuario: encontrado.usuario,
+  nombre: encontrado.nombre,
+  rol: encontrado.rol
+};
+
       localStorage.setItem(
         "sigoUsuario",
         JSON.stringify(datosUsuario)
       );
+
+      localStorage.setItem("sigoRol", encontrado.rol);
 
       navigate("/dashboard");
     } else {
